@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BlunderBuss</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="header">
+    <div class="header-content">
+      <h1>BlunderBuss</h1>
+      <p>Play Against the StockFish Chess Engine</p>
+    </div>
+  </header>
+
+  <div class="main-container">
+    <div class="game-section">
+      <div class="board-wrapper">
+        <div id="board"></div>
+      </div>
+      
+      <div class="game-status">
+        <h3>Game Status</h3>
+        <div id="status">Make your move!</div>
+      </div>
+    </div>
+
+    <div class="sidebar">
+      <div class="panel">
+        <h3>Game Settings</h3>
+        <div class="form-group">
+          <label for="difficulty">Difficulty Level</label>
+          <select id="difficulty">
+            <option value="1200">Beginner (1200 ELO)</option>
+            <option value="1400">Intermediate (1400 ELO)</option>
+            <option value="1600" selected>Advanced (1600 ELO)</option>
+            <option value="1800">Expert (1800 ELO)</option>
+            <option value="2000">Master (2000 ELO)</option>
+            <option value="2200">Grandmaster (2200 ELO)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="think-time">Engine Think Time</label>
+          <select id="think-time">
+            <option value="500">Fast (0.5 seconds)</option>
+            <option value="1000" selected>Normal (1 second)</option>
+            <option value="2000">Slow (2 seconds)</option>
+            <option value="3000">Deep (3 seconds)</option>
+          </select>
+        </div>
+        <div class="button-group">
+          <button class="btn btn-primary" onclick="newGame()">New Game</button>
+          <button class="btn btn-secondary" onclick="flipBoard()">Flip Board</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>Move History</h3>
+        <div class="move-history" id="move-list"></div>
+      </div>
+
+      <div class="panel">
+        <h3>Engine Status</h3>
+        <div class="engine-info">
+          <div id="engine-status">Ready</div>
+          <div id="engine-evaluation">Waiting for moves...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
