@@ -9,18 +9,10 @@ var moveHistory = [];
 const API_BASE_URL = window.location.protocol + '//' + 
   (window.location.hostname === 'localhost' ? 'localhost:8080' : window.location.hostname + ':8080');
 
-/*
-Remove highlights from all squares
-*/
 function removeGreySquares() {
   $('#board .square-55d63').css('background', '');
   $('#board .square-55d63').removeClass('highlight-square');
 }
-
-/**
- * Highlight a specific square
- * @param {string} square - Square to highlight (e.g., 'e4')
- */
 function greySquare(square) {
   var $square = $('#board .square-' + square);
   var background = whiteSquareGrey;
