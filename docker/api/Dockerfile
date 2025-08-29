@@ -11,8 +11,7 @@ COPY go/api/*.go ./
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /bin/api ./main.go
 
 FROM alpine:3.18
-RUN apk add --no-cache ca-certificates netcat-openbsd && \
-    adduser -D -s /bin/sh apiuser
+RUN apk add --no-cache ca-certificates netcat-openbsd && adduser -D -s /bin/sh apiuser
 
 COPY --from=build /bin/api /bin/api
 RUN chmod +x /bin/api
