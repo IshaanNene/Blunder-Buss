@@ -1,0 +1,80 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  stockfish:
+    build:
+      context: .
+      dockerfile: docker/stockfish/Dockerfile
+    container_name: stockfish
+    ports:
+      - "4000:4000"
+    healthcheck:
+      test: ["CMD", "sh", "-c", "echo 'quit' | nc localhost 4000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/api/Dockerfile
+    container_name: api
+    environment:
+      - REDIS_ADDR=redis:6379
+      - CORS_ALLOW_ORIGIN=*
+    ports:
+      - "8080:8080"
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "sh", "-c", "nc -z localhost 8080"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  worker:
+    build:
+      context: .
+      dockerfile: docker/worker/Dockerfile
+    environment:
+      - REDIS_ADDR=redis:6379
+      - ENGINE_ADDR=stockfish:4000
+    depends_on:
+      redis:
+        condition: service_healthy
+      stockfish:
+        condition: service_healthy
+    restart: unless-stopped
+    scale: 2
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/web/Dockerfile
+    container_name: web
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+    healthcheck:
+      test: ["CMD", "sh", "-c", "nc -z localhost 80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  redis_data:
