@@ -11,37 +11,54 @@ variable "environment" {
   default     = "dev"
 }
 
-# AWS Configuration
-variable "aws_region" {
-  description = "AWS region"
+# GCP Configuration
+variable "gcp_project_id" {
+  description = "GCP Project ID"
   type        = string
-  default     = "us-east-1"
+}
+
+variable "gcp_region" {
+  description = "GCP region"
+  type        = string
+  default     = "us-central1"
+}
+
+variable "gcp_zone" {
+  description = "GCP zone"
+  type        = string
+  default     = "us-central1-a"
 }
 
 # VPC Configuration
-variable "vpc_cidr" {
-  description = "CIDR block for VPC"
+variable "private_subnet_cidr" {
+  description = "CIDR block for private subnet"
   type        = string
-  default     = "10.0.0.0/16"
+  default     = "10.0.1.0/24"
 }
 
-variable "private_subnet_cidrs" {
-  description = "CIDR blocks for private subnets"
-  type        = list(string)
-  default     = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
+variable "public_subnet_cidr" {
+  description = "CIDR block for public subnet"
+  type        = string
+  default     = "10.0.101.0/24"
 }
 
-variable "public_subnet_cidrs" {
-  description = "CIDR blocks for public subnets"
-  type        = list(string)
-  default     = ["10.0.101.0/24", "10.0.102.0/24", "10.0.103.0/24"]
+variable "pod_subnet_cidr" {
+  description = "CIDR block for GKE pods"
+  type        = string
+  default     = "10.1.0.0/16"
 }
 
-# EKS Configuration
+variable "service_subnet_cidr" {
+  description = "CIDR block for GKE services"
+  type        = string
+  default     = "10.2.0.0/16"
+}
+
+# GKE Configuration
 variable "cluster_name" {
-  description = "Name of the EKS cluster"
+  description = "Name of the GKE cluster"
   type        = string
-  default     = "blunder-buss-platform-eks"
+  default     = "blunder-buss-platform-gke"
 }
 
 variable "kubernetes_version" {
@@ -51,9 +68,9 @@ variable "kubernetes_version" {
 }
 
 variable "node_instance_type" {
-  description = "EC2 instance type for EKS worker nodes"
+  description = "Compute Engine machine type for GKE worker nodes"
   type        = string
-  default     = "t3.medium"
+  default     = "e2-medium"
 }
 
 variable "node_group_min_size" {
@@ -74,21 +91,15 @@ variable "node_group_desired_size" {
   default     = 2
 }
 
-variable "key_pair_name" {
-  description = "Name of the AWS key pair for SSH access to nodes"
+# Redis Configuration (Memorystore)
+variable "redis_tier" {
+  description = "Memorystore Redis tier (BASIC or STANDARD_HA)"
   type        = string
-  default     = ""
+  default     = "BASIC"
 }
 
-# Redis Configuration
-variable "redis_node_type" {
-  description = "ElastiCache Redis node type"
-  type        = string
-  default     = "cache.t3.micro"
-}
-
-variable "redis_num_cache_nodes" {
-  description = "Number of cache nodes in the Redis cluster"
+variable "redis_memory_size_gb" {
+  description = "Memory size in GB for Redis instance"
   type        = number
   default     = 1
 }

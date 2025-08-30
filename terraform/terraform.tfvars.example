@@ -2,25 +2,25 @@
 project_name = "blunder-buss-platform"
 environment  = "dev"
 
-# AWS Configuration
-aws_region = "us-east-1"
+# GCP Configuration
+gcp_project_id = "your-gcp-project-id"
+gcp_region     = "us-central1"
+gcp_zone       = "us-central1-a"
 
 # VPC Configuration
-vpc_cidr               = "10.0.0.0/16"
-private_subnet_cidrs   = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
-public_subnet_cidrs    = ["10.0.101.0/24", "10.0.102.0/24", "10.0.103.0/24"]
+private_subnet_cidr = "10.0.1.0/24"
+public_subnet_cidr  = "10.0.101.0/24"
+pod_subnet_cidr     = "10.1.0.0/16"
+service_subnet_cidr = "10.2.0.0/16"
 
-# EKS Configuration
-cluster_name           = "blunder-buss-platform-eks"
-kubernetes_version     = "1.28"
-node_instance_type     = "t3.medium"
-node_group_min_size    = 1
-node_group_max_size    = 10
+# GKE Configuration
+cluster_name            = "blunder-buss-platform-gke"
+kubernetes_version      = "1.28"
+node_instance_type      = "e2-medium"
+node_group_min_size     = 1
+node_group_max_size     = 10
 node_group_desired_size = 2
 
-# SSH Key Pair (create in AWS console first)
-key_pair_name = "your-key-pair-name"
-
-# Redis Configuration
-redis_node_type        = "cache.t3.micro"
-redis_num_cache_nodes  = 1
+# Redis Configuration (Memorystore)
+redis_tier           = "BASIC"
+redis_memory_size_gb = 1

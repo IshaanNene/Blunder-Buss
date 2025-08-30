@@ -1,8 +1,8 @@
 apiVersion: v1
 clusters:
 - cluster:
-    certificate-authority-data: ${certificate_authority_data}
-    server: ${endpoint}
+    certificate-authority-data: ${certificate_authority}
+    server: https://${endpoint}
   name: ${cluster_name}
 contexts:
 - context:
@@ -17,11 +17,16 @@ users:
   user:
     exec:
       apiVersion: client.authentication.k8s.io/v1beta1
-      command: aws
+      command: gcloud
       args:
-        - eks
-        - get-token
-        - --cluster-name
+        - container
+        - clusters
+        - get-credentials
         - ${cluster_name}
         - --region
         - ${region}
+        - --project
+        - ${project_id}
+      env:
+        - name: USE_GKE_GCLOUD_AUTH_PLUGIN
+          value: "True"
