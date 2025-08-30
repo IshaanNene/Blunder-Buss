@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: stockfish-service
+  namespace: stockfish
+spec:
+  type: ClusterIP
+  selector:
+    app: stockfish
+  ports:
+    - port: 4000
+      targetPort: 4000

@@ -1,0 +1,32 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: stockfish
+
+resources:
+  - namespace.yaml
+  - redis-pvc.yaml
+  - redis-deployment.yaml
+  - stockfish-deployment.yaml
+  - stockfish-service.yaml
+  - api-deployment.yaml
+  - worker-deployment.yaml
+  - web-deployment.yaml
+  - web-service.yaml
+  - hpa-stockfish.yaml
+  - keda-scaledobject-queue.yaml
+
+images:
+  - name: api
+    newTag: v1.0.0
+  - name: worker
+    newTag: v1.0.0
+  - name: web
+    newTag: v1.0.0
+  - name: stockfish
+    newTag: v1.0.0
+
+labels:
+  - pairs:
+      app.kubernetes.io/name: chess-ai-platform
+      app.kubernetes.io/version: v1.0.0

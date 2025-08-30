@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stockfish
+  namespace: stockfish
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: stockfish
+  template:
+    metadata:
+      labels:
+        app: stockfish
+    spec:
+      containers:
+        - name: stockfish
+          image: stockfish:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 4000
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - "echo 'quit' | nc localhost 4000"
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 10
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - "echo 'quit' | nc localhost 4000"
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+          resources:
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+            requests:
+              cpu: "500m"
+              memory: "512Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: stockfish
+  namespace: stockfish
+spec:
+  type: ClusterIP
+  selector:
+    app: stockfish
+  ports:
+    - port: 4000
+      targetPort: 4000
