@@ -17,4 +17,5 @@
 </table>
 
 ## Repo Structure
-<img width="1282" height="1168" alt="image" src="https://github.com/user-attachments/assets/198fa812-e60a-4e30-af72-6ad214559c7f" />
+<img width="641" height="584" alt="image" src="https://github.com/user-attachments/assets/198fa812-e60a-4e30-af72-6ad214559c7f" />
+
