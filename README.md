@@ -1,4 +1,4 @@
-<img width="2564" height="2336" alt="image" src="https://github.com/user-attachments/assets/b7937e30-3810-4412-8c46-d15bcaab9679" /># Blunder-Buss
+# Blunder-Buss
 
 <table>
   <tr>
@@ -17,4 +17,4 @@
 </table>
 
 ## Repo Structure
-<img width="1282" height="1168" alt="image" src="https://github.com/user-attachments/assets/36f614a1-397c-4490-8a3b-eddc908e6be3" />
+<img width="1282" height="1168" alt="image" src="https://github.com/user-attachments/assets/198fa812-e60a-4e30-af72-6ad214559c7f" />
