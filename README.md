@@ -1,7 +1,8 @@
+#Blunder-Buss
 <table>
   <tr>
     <td>
-      <img width="60" height="60" src="https://github.com/user-attachments/assets/8b04a95e-fbc1-4edd-bfd6-1c5286e9ca0c" alt="logo"/>
+      <img width="160" height="160" src="https://github.com/user-attachments/assets/8b04a95e-fbc1-4edd-bfd6-1c5286e9ca0c" alt="logo"/>
     </td>
     <td>
       <blockquote>
@@ -13,3 +14,4 @@
     </td>
   </tr>
 </table>
+
