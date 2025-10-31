@@ -1,82 +1,83 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BlunderBuss</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
-  <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blunderbuss — Stockfish Chess</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <!-- Chess libraries -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+  <!-- Chessboard library -->
+  <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css"/>
+  <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+  <!-- Custom JS -->
+  <script src="js/app.js" defer></script>
 </head>
 <body>
-  <header class="header">
-    <div class="header-content">
-      <h1>BlunderBuss</h1>
-      <p>Play Against the StockFish Chess Engine</p>
+  <header class="neo-card neo-card-yellow">
+    <h1>BLUNDERBUSS</h1>
+    <p>Play Against the StockFish Chess Engine</p>
+    <div class="header-btns">
+      <button id="new-game-btn" class="neo-btn neo-btn-orange">New Game</button>
+      <button id="flip-board-btn" class="neo-btn neo-btn-cyan">Flip</button>
     </div>
   </header>
 
-  <div class="main-container">
-    <div class="game-section">
-      <div class="board-wrapper">
-        <div id="board"></div>
+  <main class="neo-main container">
+    <section class="neo-grid">
+      <!-- CHESS BOARD SECTION -->
+      <article class="neo-card neo-card-violet">
+        <div class="board-section">
+          <div id="board" class="neo-board"></div>
+        </div>
+      </article>
+
+      <!-- SIDE PANEL -->
+      <aside class="neo-side">
+        <div class="neo-card neo-card-yellow">
+          <div class="neo-card-title">GAME SETTINGS</div>
+          <label class="neo-label">Difficulty</label>
+          <select id="difficulty" class="neo-input">
+            <option value="1200">Beginner (1200)</option>
+            <option value="1400">Intermediate (1400)</option>
+            <option value="1600" selected>Advanced (1600)</option>
+            <option value="1800">Expert (1800)</option>
+          </select>
+
+          <label class="neo-label mt-4">Engine Think Time</label>
+          <select id="think-time" class="neo-input">
+            <option value="500">Fast (0.5s)</option>
+            <option value="1000" selected>Normal (1s)</option>
+            <option value="2000">Slow (2s)</option>
+          </select>
+
+          <div class="neo-gap mt-4">
+            <button id="resign-btn" class="neo-btn neo-btn-red">Resign</button>
+            <button id="undo-btn" class="neo-btn neo-btn-lime">Undo</button>
+          </div>
+        </div>
+
+        <div class="neo-card neo-card-cyan mt-6">
+          <div class="neo-card-title">MOVE HISTORY</div>
+          <div id="move-list" class="move-history"></div>
+        </div>
+      </aside>
+    </section>
+
+    <!-- BELOW THE BOARD -->
+    <div class="status-engine-wrapper">
+      <div class="status-card neo-card-yellow">
+        <div class="neo-card-title">GAME STATUS</div>
+        <div id="status" class="neo-status">Your move!</div>
       </div>
-      
-      <div class="game-status">
-        <h3>Game Status</h3>
-        <div id="status">Make your move!</div>
+
+      <div class="engine-card neo-card-lime">
+        <div class="neo-card-title">ENGINE</div>
+        <div id="engine-status" class="neo-chip neo-chip-green">Ready</div>
+        <div id="engine-evaluation" class="neo-eval neo-card-cyan">Evaluation: -0.3</div>
       </div>
     </div>
-
-    <div class="sidebar">
-      <div class="panel">
-        <h3>Game Settings</h3>
-        <div class="form-group">
-          <label for="difficulty">Difficulty Level</label>
-          <select id="difficulty">
-            <option value="1200">Beginner (1200 ELO)</option>
-            <option value="1400">Intermediate (1400 ELO)</option>
-            <option value="1600" selected>Advanced (1600 ELO)</option>
-            <option value="1800">Expert (1800 ELO)</option>
-            <option value="2000">Master (2000 ELO)</option>
-            <option value="2200">Grandmaster (2200 ELO)</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="think-time">Engine Think Time</label>
-          <select id="think-time">
-            <option value="500">Fast (0.5 seconds)</option>
-            <option value="1000" selected>Normal (1 second)</option>
-            <option value="2000">Slow (2 seconds)</option>
-            <option value="3000">Deep (3 seconds)</option>
-          </select>
-        </div>
-        <div class="button-group">
-          <button class="btn btn-primary" onclick="newGame()">New Game</button>
-          <button class="btn btn-secondary" onclick="flipBoard()">Flip Board</button>
-        </div>
-      </div>
-
-      <div class="panel">
-        <h3>Move History</h3>
-        <div class="move-history" id="move-list"></div>
-      </div>
-
-      <div class="panel">
-        <h3>Engine Status</h3>
-        <div class="engine-info">
-          <div id="engine-status">Ready</div>
-          <div id="engine-evaluation">Waiting for moves...</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
-  <script src="js/app.js"></script>
+  </main>
 </body>
 </html>
