@@ -1,0 +1,964 @@
+# Grafana Dashboards ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: stockfish
+data:
+  system-overview.json: |
+    {
+      "dashboard": {
+        "title": "System Overview",
+        "uid": "system-overview",
+        "tags": ["blunder-buss", "overview"],
+        "timezone": "browser",
+        "schemaVersion": 16,
+        "version": 1,
+        "refresh": "10s",
+        "time": {
+          "from": "now-1h",
+          "to": "now"
+        },
+        "panels": [
+          {
+            "id": 1,
+            "title": "API Request Rate",
+            "type": "graph",
+            "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
+            "targets": [
+              {
+                "expr": "rate(api_requests_total[1m])",
+                "legendFormat": "{{status_code}}",
+                "refId": "A"
+              }
+            ],
+            "yaxes": [
+              {"format": "reqps", "label": "Requests/sec"},
+              {"format": "short"}
+            ],
+            "xaxis": {"mode": "time"},
+            "lines": true,
+            "fill": 1,
+            "linewidth": 2,
+            "pointradius": 5,
+            "legend": {
+              "show": true,
+              "values": true,
+              "current": true,
+              "alignAsTable": true
+            }
+          },
+          {
+            "id": 2,
+            "title": "API Latency Percentiles (P50/P95/P99)",
+            "type": "graph",
+            "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8},
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.50, rate(api_request_duration_seconds_bucket[1m]))",
+                "legendFormat": "P50",
+                "refId": "A"
+              },
+              {
+                "expr": "histogram_quantile(0.95, rate(api_request_duration_seconds_bucket[1m]))",
+                "legendFormat": "P95",
+                "refId": "B"
+              },
+              {
+                "expr": "histogram_quantile(0.99, rate(api_request_duration_seconds_bucket[1m]))",
+                "legendFormat": "P99",
+                "refId": "C"
+              }
+            ],
+            "yaxes": [
+              {"format": "s", "label": "Latency"},
+              {"format": "short"}
+            ],
+            "xaxis": {"mode": "time"},
+            "lines": true,
+            "fill": 0,
+            "linewidth": 2,
+            "pointradius": 5,
+            "legend": {
+              "show": true,
+              "values": true,
+              "current": true,
+              "alignAsTable": true
+            },
+            "alert": {
+              "name": "High P95 Latency",
+              "conditions": [
+                {
+                  "evaluator": {"params": [10], "type": "gt"},
+                  "operator": {"type": "and"},
+                  "query": {"params": ["B", "5m", "now"]},
+                  "reducer": {"params": [], "type": "avg"},
+                  "type": "query"
+                }
+              ],
+              "executionErrorState": "alerting",
+              "frequency": "1m",
+              "handler": 1,
+              "message": "API P95 latency is above 10 seconds",
+              "noDataState": "no_data"
+            }
+          },
+          {
+            "id": 3,
+            "title": "Error Rate Percentage",
+            "type": "graph",
+            "gridPos": {"x": 0, "y": 8, "w": 12, "h": 8},
+            "targets": [
+              {
+                "expr": "(sum(rate(api_requests_total{status_code=~\"5..\"}[2m])) / sum(rate(api_requests_total[2m]))) * 100",
+                "legendFormat": "Error Rate %",
+                "refId": "A"
+              }
+            ],
+            "yaxes": [
+              {"format": "percent", "label": "Error Rate", "max": 100, "min": 0},
+              {"format": "short"}
+            ],
+            "xaxis": {"mode": "time"},
+            "lines": true,
+            "fill": 2,
+            "linewidth": 2,
+            "pointradius": 5,
+            "legend": {
+              "show": true,
+              "values": true,
+              "current": true,
+              "max": true,
+              "alignAsTable": true
+            },
+            "thresholds": [
+              {
+                "value": 5,
+                "colorMode": "critical",
+                "op": "gt",
+                "fill": true,
+                "line": true
+              }
+            ],
+            "alert": {
+              "name": "High Error Rate",
+              "conditions": [
+                {
+                  "evaluator": {"params": [5], "type": "gt"},
+                  "operator": {"type": "and"},
+                  "query": {"params": ["A", "2m", "now"]},
+                  "reducer": {"params": [], "type": "avg"},
+                  "type": "query"
+                }
+              ],
+              "executionErrorState": "alerting",
+              "frequency": "1m",
+              "handler": 1,
+              "message": "Error rate is above 5%",
+              "noDataState": "no_data"
+            }
+          },
+          {
+            "id": 4,
+            "title": "Active Replica Counts",
+            "type": "graph",
+            "gridPos": {"x": 12, "y": 8, "w": 12, "h": 8},
+            "targets": [
+              {
+                "expr": "count(up{job=\"api\"} == 1)",
+                "legendFormat": "API Replicas",
+                "refId": "A"
+              },
+              {
+                "expr": "count(up{job=\"worker\"} == 1)",
+                "legendFormat": "Worker Replicas",
+                "refId": "B"
+              },
+              {
+                "expr": "service_replica_count{service=\"stockfish\"}",
+                "legendFormat": "Stockfish Replicas",
+                "refId": "C"
+              }
+            ],
+            "yaxes": [
+              {"format": "short", "label": "Replicas", "decimals": 0},
+              {"format": "short"}
+            ],
+            "xaxis": {"mode": "time"},
+            "lines": true,
+            "fill": 0,
+            "linewidth": 2,
+            "pointradius": 5,
+            "steppedLine": true,
+            "legend": {
+              "show": true,
+              "values": true,
+              "current": true,
+              "alignAsTable": true
+            }
+          },
+          {
+            "id": 5,
+            "title": "Redis Queue Depth",
+            "type": "graph",
+            "gridPos": {"x": 0, "y": 16, "w": 24, "h": 8},
+            "targets": [
+              {
+                "expr": "redis_queue_depth",
+                "legendFormat": "Queue Depth",
+                "refId": "A"
+              },
+              {
+                "expr": "avg_over_time(redis_queue_depth[5m])",
+                "legendFormat": "5min Average (Trend)",
+                "refId": "B"
+              }
+            ],
+            "yaxes": [
+              {"format": "short", "label": "Jobs in Queue", "decimals": 0},
+              {"format": "short"}
+            ],
+            "xaxis": {"mode": "time"},
+            "lines": true,
+            "fill": 1,
+            "linewidth": 2,
+            "pointradius": 5,
+            "legend": {
+              "show": true,
+              "values": true,
+              "current": true,
+              "max": true,
+              "alignAsTable": true
+            },
+            "thresholds": [
+              {
+                "value": 100,
+                "colorMode": "warning",
+                "op": "gt",
+                "fill": false,
+                "line": true
+              }
+            ]
+          }
+        ]
+      }
+    }
+
+  auto-scaling.json: |
+    {
+      "dashboard": {
+        "title": "Auto-Scaling Metrics",
+        "uid": "auto-scaling",
+        "tags": ["blunder-buss", "scaling"],
+        "timezone": "browser",
+        "schemaVersion": 16,
+        "version": 1,
+        "refresh": "10s",
+        "time": {
+          "from": "now-1h",
+          "to": "now"
+        },
+        "panels": [
+          {
+            "id": 1,
+            "title": "Worker Replicas vs Queue Depth",
+            "type": "graph",
+            "gridPos": {"x": 0, "y": 0, "w": 24, "h": 10},
+            "targets": [
+              {
+                "expr": "redis_queue_depth",
+                "legendFormat": "Queue Depth",
+                "refId": "A",
+                "yAxisIndex": 0
+              },
+              {
+                "expr": "count(up{job=\"worker\"} == 1)",
+                "legendFormat": "Worker Replicas",
+                "refId": "B",
+                "yAxisIndex": 1
+              },
+              {
+                "expr": "redis_queue_depth / count(up{job=\"worker\"} == 1)",
+                "legendFormat": "Jobs per Worker",
+                "refId": "C",
+                "yAxisIndex": 0
+              }
+            ],
+            "yaxes": [
+              {"format": "short", "label": "Queue Depth / Jobs per Worker", "decimals": 0},
+              {"format": "short", "label": "Worker Replicas", "decimals": 0}
+            ],
+            "xaxis": {"mode": "time"},
+            "lines": true,
+            "fill": 1,
+            "linewidth": 2,
+            "pointradius": 5,
+            "legend": {
+              "show": true,
+              "values": true,
+              "current": true,
+              "max": true,
+              "alignAsTable": true
+            },
+            "seriesOverrides": [
+              {
+                "alias": "Worker Replicas",
+                "yaxis": 2,
+                "fill": 0,
+                "linewidth": 3
+              }
+            ]
+          },
+          {
+            "id": 2,
+            "title": "Stockfish Replicas vs CPU Utilization",
+            "type": "graph",
+            "gridPos": {"x": 0, "y": 10, "w": 24, "h": 10},
+            "targets": [
+              {
+                "expr": "avg(rate(container_cpu_usage_seconds_total{pod=~\"stockfish-.*\"}[1m])) * 100",
+                "legendFormat": "CPU Utilization %",
+                "refId": "A",
+                "yAxisIndex": 0
+              },
+              {
+                "expr": "service_replica_count{service=\"stockfish\"}",
+                "legendFormat": "Stockfish Replicas",
+                "refId": "B",
+                "yAxisIndex": 1
+              }
+            ],
+            "yaxes": [
+              {"format": "percent", "label": "CPU Utilization", "max": 100, "min": 0},
+              {"format": "short", "label": "Replicas", "decimals": 0}
+            ],
+            "xaxis": {"mode": "time"},
+            "lines": true,
+            "fill": 1,
+            "linewidth": 2,
+            "pointradius": 5,
+            "legend": {
+              "show": true,
+              "values": true,
+              "current": true,
+              "avg": true,
+              "alignAsTable": true
+            },
+            "seriesOverrides": [
+              {
+                "alias": "Stockfish Replicas",
+                "yaxis": 2,
+                "fill": 0,
+                "linewidth": 3
+              }
+            ],
+            "thresholds": [
+              {
+                "value": 75,
+                "colorMode": "warning",
+                "op": "gt",
+                "fill": false,
+                "line": true,
+                "yaxis": "left"
+              }
+            ]
+          },
+          {
+            "id": 3,
+            "title": "Scaling Events Timeline",
+            "type": "graph",
+            "gridPos": {"x": 0, "y": 20, "w": 24, "h": 8},
+            "targets": [
+              {
+                "expr": "increase(scaling_events_total{direction=\"up\"}[1m])",
+                "legendFormat": "Scale-Up Events - {{service}}",
+                "refId": "A"
+              },
+              {
+                "expr": "increase(scaling_events_total{direction=\"down\"}[1m])",
+                "legendFormat": "Scale-Down Events - {{service}}",
+                "refId": "B"
+              }
+            ],
+            "yaxes": [
+              {"format": "short", "label": "Events", "decimals": 0},
+              {"format": "short"}
+            ],
+            "xaxis": {"mode": "time"},
+            "bars": true,
+            "lines": false,
+            "fill": 1,
+            "linewidth": 2,
+            "pointradius": 5,
+            "legend": {
+              "show": true,
+              "values": true,
+              "total": true,
+              "alignAsTable": true
+            }
+          },
+          {
+            "id": 4,
+            "title": "Scaling Policy Thresholds",
+            "type": "table",
+            "gridPos": {"x": 0, "y": 28, "w": 24, "h": 8},
+            "targets": [
+              {
+                "expr": "redis_queue_depth",
+                "legendFormat": "Current Queue Depth",
+                "refId": "A",
+                "instant": true
+              },
+              {
+                "expr": "count(up{job=\"worker\"} == 1) * 10",
+                "legendFormat": "Worker Scale-Up Threshold (10 jobs/replica)",
+                "refId": "B",
+                "instant": true
+              },
+              {
+                "expr": "count(up{job=\"worker\"} == 1) * 2",
+                "legendFormat": "Worker Scale-Down Threshold (2 jobs/replica)",
+                "refId": "C",
+                "instant": true
+              }
+            ],
+            "transform": "timeseries_to_rows",
+            "styles": [
+              {
+                "pattern": "Metric",
+                "type": "string",
+                "alias": "Metric"
+              },
+              {
+                "pattern": "Value",
+                "type": "number",
+                "alias": "Current Value",
+                "decimals": 0
+              }
+            ]
+          }
+        ]
+      }
+    }
+
+  fault-tolerance.json: |
+    {
+      "dashboard": {
+        "title": "Fault Tolerance",
+        "uid": "fault-tolerance",
+        "tags": ["blunder-buss", "reliability"],
+        "timezone": "browser",
+        "schemaVersion": 16,
+        "version": 1,
+        "refresh": "10s",
+        "time": {
+          "from": "now-1h",
+          "to": "now"
+        },
+        "panels": [
+          {
+            "id": 1,
+            "title": "Circuit Breaker States",
+            "type": "graph",
+            "gridPos": {"x": 0, "y": 0, "w": 24, "h": 10},
+            "targets": [
+              {
+                "expr": "circuit_breaker_state{service=\"redis\", component=\"api\"}",
+                "legendFormat": "API → Redis",
+                "refId": "A"
+              },
+              {
+                "expr": "circuit_breaker_state{service=\"stockfish\", component=\"worker\"}",
+                "legendFormat": "Worker → Stockfish",
+                "refId": "B"
+              }
+            ],
+            "yaxes": [
+              {
+                "format": "short",
+                "label": "State",
+                "decimals": 0,
+                "min": 0,
+                "max": 2
+              },
+              {"format": "short"}
+            ],
+            "xaxis": {"mode": "time"},
+            "lines": true,
+            "fill": 3,
+            "linewidth": 2,
+            "pointradius": 5,
+            "steppedLine": true,
+            "legend": {
+              "show": true,
+              "values": true,
+              "current": true,
+              "alignAsTable": true
+            },
+            "valueMaps": [
+              {"value": "0", "text": "Closed"},
+              {"value": "1", "text": "Half-Open"},
+              {"value": "2", "text": "Open"}
+            ],
+            "thresholds": [
+              {
+                "value": 0,
+                "colorMode": "custom",
+                "fillColor": "rgba(50, 172, 45, 0.2)",
+                "lineColor": "rgba(50, 172, 45, 1)",
+                "op": "eq"
+              },
+              {
+                "value": 1,
+                "colorMode": "custom",
+                "fillColor": "rgba(237, 129, 40, 0.2)",
+                "lineColor": "rgba(237, 129, 40, 1)",
+                "op": "eq"
+              },
+              {
+                "value": 2,
+                "colorMode": "custom",
+                "fillColor": "rgba(245, 54, 54, 0.2)",
+                "lineColor": "rgba(245, 54, 54, 1)",
+                "op": "eq"
+              }
+            ]
+          },
+          {
+            "id": 2,
+            "title": "Retry Attempt Counts by Service",
+            "type": "graph",
+            "gridPos": {"x": 0, "y": 10, "w": 12, "h": 8},
+            "targets": [
+              {
+                "expr": "rate(retry_attempts_total{service=\"api\"}[1m])",
+                "legendFormat": "API - {{operation}} (attempt {{attempt_number}})",
+                "refId": "A"
+              },
+              {
+                "expr": "rate(retry_attempts_total{service=\"worker\"}[1m])",
+                "legendFormat": "Worker - {{operation}} (attempt {{attempt_number}})",
+                "refId": "B"
+              }
+            ],
+            "yaxes": [
+              {"format": "ops", "label": "Retries/sec"},
+              {"format": "short"}
+            ],
+            "xaxis": {"mode": "time"},
+            "lines": true,
+            "fill": 1,
+            "linewidth": 2,
+            "pointradius": 5,
+            "legend": {
+              "show": true,
+              "values": true,
+              "current": true,
+              "total": true,
+              "alignAsTable": true
+            }
+          },
+          {
+            "id": 3,
+            "title": "Connection Failure Rates",
+            "type": "graph",
+            "gridPos": {"x": 12, "y": 10, "w": 12, "h": 8},
+            "targets": [
+              {
+                "expr": "rate(circuit_breaker_failures_total{service=\"redis\", component=\"api\"}[1m])",
+                "legendFormat": "API → Redis Failures",
+                "refId": "A"
+              },
+              {
+                "expr": "rate(circuit_breaker_failures_total{service=\"stockfish\", component=\"worker\"}[1m])",
+                "legendFormat": "Worker → Stockfish Failures",
+                "refId": "B"
+              }
+            ],
+            "yaxes": [
+              {"format": "ops", "label": "Failures/sec"},
+              {"format": "short"}
+            ],
+            "xaxis": {"mode": "time"},
+            "lines": true,
+            "fill": 2,
+            "linewidth": 2,
+            "pointradius": 5,
+            "legend": {
+              "show": true,
+              "values": true,
+              "current": true,
+              "total": true,
+              "alignAsTable": true
+            },
+            "alert": {
+              "name": "High Connection Failure Rate",
+              "conditions": [
+                {
+                  "evaluator": {"params": [1], "type": "gt"},
+                  "operator": {"type": "or"},
+                  "query": {"params": ["A", "2m", "now"]},
+                  "reducer": {"params": [], "type": "avg"},
+                  "type": "query"
+                }
+              ],
+              "executionErrorState": "alerting",
+              "frequency": "1m",
+              "handler": 1,
+              "message": "Connection failure rate is elevated",
+              "noDataState": "no_data"
+            }
+          },
+          {
+            "id": 4,
+            "title": "Service Dependency Health Matrix",
+            "type": "table",
+            "gridPos": {"x": 0, "y": 18, "w": 24, "h": 10},
+            "targets": [
+              {
+                "expr": "up{job=\"api\"}",
+                "legendFormat": "API Service",
+                "refId": "A",
+                "instant": true
+              },
+              {
+                "expr": "up{job=\"worker\"}",
+                "legendFormat": "Worker Service",
+                "refId": "B",
+                "instant": true
+              },
+              {
+                "expr": "redis_up",
+                "legendFormat": "Redis",
+                "refId": "C",
+                "instant": true
+              },
+              {
+                "expr": "circuit_breaker_state{service=\"redis\", component=\"api\"}",
+                "legendFormat": "API → Redis Circuit",
+                "refId": "D",
+                "instant": true
+              },
+              {
+                "expr": "circuit_breaker_state{service=\"stockfish\", component=\"worker\"}",
+                "legendFormat": "Worker → Stockfish Circuit",
+                "refId": "E",
+                "instant": true
+              }
+            ],
+            "transform": "timeseries_aggregations",
+            "styles": [
+              {
+                "pattern": "Metric",
+                "type": "string",
+                "alias": "Service/Connection"
+              },
+              {
+                "pattern": "Current",
+                "type": "number",
+                "alias": "Status",
+                "decimals": 0,
+                "colorMode": "cell",
+                "colors": ["rgba(245, 54, 54, 0.9)", "rgba(237, 129, 40, 0.9)", "rgba(50, 172, 45, 0.9)"],
+                "thresholds": ["0.5", "1.5"]
+              }
+            ],
+            "columns": [
+              {"text": "Current", "value": "current"}
+            ]
+          }
+        ]
+      }
+    }
+
+  cost-efficiency.json: |
+    {
+      "dashboard": {
+        "title": "Cost Efficiency",
+        "uid": "cost-efficiency",
+        "tags": ["blunder-buss", "cost", "optimization"],
+        "timezone": "browser",
+        "schemaVersion": 16,
+        "version": 1,
+        "refresh": "30s",
+        "time": {
+          "from": "now-6h",
+          "to": "now"
+        },
+        "panels": [
+          {
+            "id": 1,
+            "title": "Operations per CPU-Second Ratio",
+            "type": "graph",
+            "gridPos": {"x": 0, "y": 0, "w": 12, "h": 10},
+            "targets": [
+              {
+                "expr": "cost_efficiency_ratio",
+                "legendFormat": "{{service}}",
+                "refId": "A"
+              },
+              {
+                "expr": "avg(cost_efficiency_ratio)",
+                "legendFormat": "Average Efficiency",
+                "refId": "B"
+              }
+            ],
+            "yaxes": [
+              {"format": "short", "label": "Operations / CPU-Second", "decimals": 2},
+              {"format": "short"}
+            ],
+            "xaxis": {"mode": "time"},
+            "lines": true,
+            "fill": 1,
+            "linewidth": 2,
+            "pointradius": 5,
+            "legend": {
+              "show": true,
+              "values": true,
+              "current": true,
+              "avg": true,
+              "max": true,
+              "alignAsTable": true
+            },
+            "seriesOverrides": [
+              {
+                "alias": "Average Efficiency",
+                "fill": 0,
+                "linewidth": 3,
+                "dashes": true
+              }
+            ]
+          },
+          {
+            "id": 2,
+            "title": "Estimated Hourly Cost",
+            "type": "graph",
+            "gridPos": {"x": 12, "y": 0, "w": 12, "h": 10},
+            "targets": [
+              {
+                "expr": "sum(service_replica_count * 0.05)",
+                "legendFormat": "Estimated Cost ($/hour)",
+                "refId": "A"
+              },
+              {
+                "expr": "sum(service_replica_count * 0.05) * 24",
+                "legendFormat": "Projected Daily Cost ($)",
+                "refId": "B"
+              },
+              {
+                "expr": "sum(service_replica_count * 0.05) * 730",
+                "legendFormat": "Projected Monthly Cost ($)",
+                "refId": "C"
+              }
+            ],
+            "yaxes": [
+              {"format": "currencyUSD", "label": "Cost"},
+              {"format": "short"}
+            ],
+            "xaxis": {"mode": "time"},
+            "lines": true,
+            "fill": 1,
+            "linewidth": 2,
+            "pointradius": 5,
+            "legend": {
+              "show": true,
+              "values": true,
+              "current": true,
+              "avg": true,
+              "alignAsTable": true
+            }
+          },
+          {
+            "id": 3,
+            "title": "Idle Time Percentage by Service",
+            "type": "graph",
+            "gridPos": {"x": 0, "y": 10, "w": 12, "h": 10},
+            "targets": [
+              {
+                "expr": "(rate(worker_idle_time_seconds[5m]) / (rate(worker_idle_time_seconds[5m]) + rate(worker_total_processing_seconds_sum[5m]))) * 100",
+                "legendFormat": "Worker Idle %",
+                "refId": "A"
+              }
+            ],
+            "yaxes": [
+              {"format": "percent", "label": "Idle Time %", "max": 100, "min": 0},
+              {"format": "short"}
+            ],
+            "xaxis": {"mode": "time"},
+            "lines": true,
+            "fill": 2,
+            "linewidth": 2,
+            "pointradius": 5,
+            "legend": {
+              "show": true,
+              "values": true,
+              "current": true,
+              "avg": true,
+              "max": true,
+              "alignAsTable": true
+            },
+            "thresholds": [
+              {
+                "value": 50,
+                "colorMode": "warning",
+                "op": "gt",
+                "fill": true,
+                "line": true
+              },
+              {
+                "value": 75,
+                "colorMode": "critical",
+                "op": "gt",
+                "fill": true,
+                "line": true
+              }
+            ]
+          },
+          {
+            "id": 4,
+            "title": "Resource Utilization Heatmap",
+            "type": "heatmap",
+            "gridPos": {"x": 12, "y": 10, "w": 12, "h": 10},
+            "targets": [
+              {
+                "expr": "avg(rate(container_cpu_usage_seconds_total{namespace=\"stockfish\"}[5m])) by (pod)",
+                "legendFormat": "{{pod}}",
+                "refId": "A",
+                "format": "time_series"
+              }
+            ],
+            "yAxis": {
+              "format": "short",
+              "decimals": 0
+            },
+            "xAxis": {
+              "mode": "time"
+            },
+            "dataFormat": "timeseries",
+            "color": {
+              "mode": "spectrum",
+              "colorScheme": "interpolateRdYlGn",
+              "exponent": 0.5,
+              "min": 0,
+              "max": 1
+            },
+            "legend": {
+              "show": true
+            }
+          },
+          {
+            "id": 5,
+            "title": "CPU-Seconds Consumed by Service",
+            "type": "graph",
+            "gridPos": {"x": 0, "y": 20, "w": 12, "h": 8},
+            "targets": [
+              {
+                "expr": "rate(service_cpu_seconds_total[5m])",
+                "legendFormat": "{{service}}",
+                "refId": "A"
+              }
+            ],
+            "yaxes": [
+              {"format": "short", "label": "CPU-Seconds/sec"},
+              {"format": "short"}
+            ],
+            "xaxis": {"mode": "time"},
+            "lines": true,
+            "fill": 1,
+            "linewidth": 2,
+            "pointradius": 5,
+            "stack": true,
+            "legend": {
+              "show": true,
+              "values": true,
+              "current": true,
+              "total": true,
+              "alignAsTable": true
+            }
+          },
+          {
+            "id": 6,
+            "title": "Average Replicas Over Time",
+            "type": "graph",
+            "gridPos": {"x": 12, "y": 20, "w": 12, "h": 8},
+            "targets": [
+              {
+                "expr": "service_average_replicas",
+                "legendFormat": "{{service}} (1h avg)",
+                "refId": "A"
+              },
+              {
+                "expr": "service_replica_count",
+                "legendFormat": "{{service}} (current)",
+                "refId": "B"
+              }
+            ],
+            "yaxes": [
+              {"format": "short", "label": "Replicas", "decimals": 1},
+              {"format": "short"}
+            ],
+            "xaxis": {"mode": "time"},
+            "lines": true,
+            "fill": 0,
+            "linewidth": 2,
+            "pointradius": 5,
+            "legend": {
+              "show": true,
+              "values": true,
+              "current": true,
+              "avg": true,
+              "alignAsTable": true
+            },
+            "seriesOverrides": [
+              {
+                "alias": "/.* \\(current\\)/",
+                "dashes": true
+              }
+            ]
+          },
+          {
+            "id": 7,
+            "title": "Cost Optimization Recommendations",
+            "type": "table",
+            "gridPos": {"x": 0, "y": 28, "w": 24, "h": 8},
+            "targets": [
+              {
+                "expr": "cost_efficiency_ratio",
+                "legendFormat": "{{service}} Efficiency",
+                "refId": "A",
+                "instant": true
+              },
+              {
+                "expr": "(rate(worker_idle_time_seconds[1h]) / (rate(worker_idle_time_seconds[1h]) + rate(worker_total_processing_seconds_sum[1h]))) * 100",
+                "legendFormat": "Worker Idle %",
+                "refId": "B",
+                "instant": true
+              },
+              {
+                "expr": "redis_queue_depth_variance",
+                "legendFormat": "Queue Variance",
+                "refId": "C",
+                "instant": true
+              }
+            ],
+            "transform": "timeseries_aggregations",
+            "styles": [
+              {
+                "pattern": "Metric",
+                "type": "string",
+                "alias": "Metric"
+              },
+              {
+                "pattern": "Current",
+                "type": "number",
+                "alias": "Value",
+                "decimals": 2
+              }
+            ],
+            "columns": [
+              {"text": "Current", "value": "current"}
+            ]
+          }
+        ]
+      }
+    }

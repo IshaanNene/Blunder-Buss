@@ -7,6 +7,7 @@ resources:
   - namespace.yaml
   - redis-pvc.yaml
   - redis-deployment.yaml
+  - redis-exporter-deployment.yaml
   - stockfish-deployment.yaml
   - stockfish-service.yaml
   - api-deployment.yaml
@@ -15,6 +16,10 @@ resources:
   - web-service.yaml
   - hpa-stockfish.yaml
   - keda-scaledobject-queue.yaml
+  - keda-scaledobject-latency.yaml
+  - prometheus-deployment.yaml
+  - grafana-deployment.yaml
+  - grafana-dashboards.yaml
 
 images:
   - name: api

@@ -1,0 +1,76 @@
+# Redis Exporter Deployment for queue metrics monitoring
+# Exposes Redis metrics on port 9121 for Prometheus scraping
+# Requirement 5.7: Track queue depth variance for provisioning analysis
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-exporter
+  namespace: stockfish
+  labels:
+    app: redis-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis-exporter
+  template:
+    metadata:
+      labels:
+        app: redis-exporter
+    spec:
+      containers:
+        - name: redis-exporter
+          image: oliver006/redis_exporter:v1.55.0-alpine
+          ports:
+            - containerPort: 9121
+              name: metrics
+          env:
+            # Configure exporter to connect to Redis service
+            - name: REDIS_ADDR
+              value: "redis://redis:6379"
+            # Enable additional metrics for queue monitoring
+            - name: REDIS_EXPORTER_CHECK_KEYS
+              value: "stockfish:jobs,stockfish:results"
+            # Export key sizes for queue depth tracking
+            - name: REDIS_EXPORTER_CHECK_KEY_GROUPS
+              value: "stockfish:*"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 9121
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 9121
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "100m"
+              memory: "128Mi"
+
+---
+# Service for Prometheus to scrape Redis Exporter metrics
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-exporter
+  namespace: stockfish
+  labels:
+    app: redis-exporter
+spec:
+  selector:
+    app: redis-exporter
+  ports:
+    - port: 9121
+      targetPort: 9121
+      name: metrics
+  type: ClusterIP

@@ -24,6 +24,9 @@ spec:
               value: "*"
           ports:
             - containerPort: 8080
+              name: http
+            - containerPort: 8080
+              name: metrics
           livenessProbe:
             httpGet:
               path: /healthz
@@ -38,11 +41,11 @@ spec:
             periodSeconds: 5
           resources:
             requests:
-              cpu: "100m"
-              memory: "128Mi"
+              cpu: "200m"
+              memory: "256Mi"
             limits:
-              cpu: "500m"
-              memory: "512Mi"
+              cpu: "1000m"
+              memory: "1Gi"
 ---
 apiVersion: v1
 kind: Service

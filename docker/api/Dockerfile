@@ -1,6 +1,10 @@
 FROM golang:1.24-alpine AS build
 WORKDIR /src
 
+# Copy pkg directory first
+COPY go/pkg /src/pkg
+
+# Copy api module files
 COPY go/api/go.mod go/api/go.sum ./
 
 RUN apk add --no-cache git ca-certificates

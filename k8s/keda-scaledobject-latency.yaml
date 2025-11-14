@@ -1,0 +1,41 @@
+# KEDA ScaledObject for latency-based worker scaling
+# This acts as a secondary scaling trigger based on API P95 latency
+# Requirement 2.3: Scale workers when P95 API latency exceeds 5 seconds
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: worker-latency-scaler
+  namespace: stockfish
+spec:
+  scaleTargetRef:
+    name: worker
+  minReplicaCount: 1   # Minimum 1 replica (requirement 2.6)
+  maxReplicaCount: 20  # Maximum 20 replicas (requirement 2.6)
+  pollingInterval: 15  # Check metrics every 15 seconds
+  cooldownPeriod: 300  # 5 minutes for scale-down (requirement 2.4)
+  triggers:
+    - type: prometheus
+      metadata:
+        # Prometheus server address
+        serverAddress: http://prometheus:9090
+        # Metric name for identification
+        metricName: api_request_duration_p95
+        # Threshold: 5 seconds P95 latency (requirement 2.3)
+        threshold: '5'
+        # Query P95 API latency from Prometheus over 2-minute window
+        # This calculates the 95th percentile of API request duration
+        query: |
+          histogram_quantile(0.95, 
+            rate(api_request_duration_seconds_bucket[2m])
+          )
+  advanced:
+    horizontalPodAutoscalerConfig:
+      behavior:
+        scaleUp:
+          stabilizationWindowSeconds: 30  # 30s cooldown for scale-up (requirement 2.4)
+          policies:
+            - type: Percent
+              value: 100
+              periodSeconds: 30
+        scaleDown:
+          stabilizationWindowSeconds: 300  # 5 minutes stabilization for scale-down (requirement 2.4)

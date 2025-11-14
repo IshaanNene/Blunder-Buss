@@ -22,10 +22,27 @@ spec:
               value: "redis:6379"
             - name: ENGINE_ADDR
               value: "stockfish:4000"
+          ports:
+            - containerPort: 9090
+              name: metrics
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 9090
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 9090
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 3
           resources:
             requests:
-              cpu: "250m"
-              memory: "256Mi"
-            limits:
               cpu: "500m"
               memory: "512Mi"
+            limits:
+              cpu: "2000m"
+              memory: "2Gi"

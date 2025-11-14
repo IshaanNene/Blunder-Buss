@@ -1,0 +1,166 @@
+# Grafana ConfigMap for datasource and dashboard provisioning
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  namespace: stockfish
+data:
+  datasources.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        access: proxy
+        url: http://prometheus:9090
+        isDefault: true
+        editable: false
+        jsonData:
+          timeInterval: "15s"
+          httpMethod: "POST"
+
+---
+# Grafana ConfigMap for dashboard provisioning configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-providers
+  namespace: stockfish
+data:
+  dashboards.yaml: |
+    apiVersion: 1
+    providers:
+      - name: 'Blunder-Buss Dashboards'
+        orgId: 1
+        folder: ''
+        type: file
+        disableDeletion: false
+        updateIntervalSeconds: 10
+        allowUiUpdates: true
+        options:
+          path: /var/lib/grafana/dashboards
+
+---
+# Grafana Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: stockfish
+  labels:
+    app: grafana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+        - name: grafana
+          image: grafana/grafana:10.2.0
+          ports:
+            - containerPort: 3000
+              name: http
+              protocol: TCP
+          env:
+            # Disable login for easier access (development/demo setup)
+            - name: GF_AUTH_ANONYMOUS_ENABLED
+              value: "true"
+            - name: GF_AUTH_ANONYMOUS_ORG_ROLE
+              value: "Admin"
+            - name: GF_AUTH_DISABLE_LOGIN_FORM
+              value: "true"
+            # Server configuration
+            - name: GF_SERVER_ROOT_URL
+              value: "http://localhost:30300"
+            - name: GF_SERVER_SERVE_FROM_SUB_PATH
+              value: "false"
+            # Paths
+            - name: GF_PATHS_PROVISIONING
+              value: "/etc/grafana/provisioning"
+            - name: GF_PATHS_DATA
+              value: "/var/lib/grafana"
+            # Logging
+            - name: GF_LOG_LEVEL
+              value: "info"
+            # Dashboards
+            - name: GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH
+              value: "/var/lib/grafana/dashboards/system-overview.json"
+          volumeMounts:
+            # Datasource provisioning
+            - name: grafana-datasources
+              mountPath: /etc/grafana/provisioning/datasources
+              readOnly: true
+            # Dashboard provider configuration
+            - name: grafana-dashboard-providers
+              mountPath: /etc/grafana/provisioning/dashboards
+              readOnly: true
+            # Dashboard JSON files
+            - name: grafana-dashboards
+              mountPath: /var/lib/grafana/dashboards
+              readOnly: true
+            # Persistent storage for Grafana data
+            - name: grafana-storage
+              mountPath: /var/lib/grafana/data
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+      volumes:
+        # Datasource configuration
+        - name: grafana-datasources
+          configMap:
+            name: grafana-datasources
+        # Dashboard provider configuration
+        - name: grafana-dashboard-providers
+          configMap:
+            name: grafana-dashboard-providers
+        # Dashboard JSON files from existing ConfigMap
+        - name: grafana-dashboards
+          configMap:
+            name: grafana-dashboards
+        # Persistent storage for Grafana data (using emptyDir for simplicity)
+        - name: grafana-storage
+          emptyDir: {}
+
+---
+# Grafana Service exposing on NodePort 30300
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  namespace: stockfish
+  labels:
+    app: grafana
+spec:
+  type: NodePort
+  selector:
+    app: grafana
+  ports:
+    - port: 3000
+      targetPort: 3000
+      nodePort: 30300
+      protocol: TCP
+      name: http

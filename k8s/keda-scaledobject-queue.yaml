@@ -1,18 +1,30 @@
 apiVersion: keda.sh/v1alpha1
 kind: ScaledObject
 metadata:
-  name: worker-queue-scaledobject
+  name: worker-queue-scaler
   namespace: stockfish
 spec:
   scaleTargetRef:
     name: worker
+  minReplicaCount: 1   # Minimum 1 replica (requirement 2.6)
+  maxReplicaCount: 20  # Maximum 20 replicas (requirement 2.6)
   pollingInterval: 15
-  cooldownPeriod: 30
-  minReplicaCount: 1
-  maxReplicaCount: 10
+  cooldownPeriod: 300  # 5 minutes for scale-down (requirement 2.4)
   triggers:
     - type: redis
       metadata:
         address: redis:6379
         listName: stockfish:jobs
-        listLength: "5"
+        listLength: "10"  # 10 jobs per replica threshold (requirement 2.1)
+        activationListLength: "1"
+  advanced:
+    horizontalPodAutoscalerConfig:
+      behavior:
+        scaleUp:
+          stabilizationWindowSeconds: 30  # 30s cooldown for scale-up (requirement 2.4)
+          policies:
+            - type: Percent
+              value: 100
+              periodSeconds: 30
+        scaleDown:
+          stabilizationWindowSeconds: 300  # 5 minutes stabilization for scale-down (requirement 2.4)
