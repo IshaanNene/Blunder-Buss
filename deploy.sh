@@ -56,4 +56,4 @@ kubectl apply -f k8s/web-deployment.yaml
 kubectl apply -f k8s/hpa-stockfish.yaml || true
 kubectl apply -f k8s/keda-scaledobject-queue.yaml || true
 
-echo "✅ Deployment complete!"
+echo "Deployment complete!"
